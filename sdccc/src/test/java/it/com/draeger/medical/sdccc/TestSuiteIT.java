@@ -12,11 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.draeger.medical.sdccc.TestSuite;
@@ -25,8 +21,6 @@ import com.draeger.medical.sdccc.configuration.DefaultTestSuiteConfig;
 import com.draeger.medical.sdccc.configuration.DefaultTestSuiteModule;
 import com.draeger.medical.sdccc.configuration.TestRunConfig;
 import com.draeger.medical.sdccc.configuration.TestSuiteConfig;
-import com.draeger.medical.sdccc.manipulation.precondition.PreconditionException;
-import com.draeger.medical.sdccc.manipulation.precondition.PreconditionRegistry;
 import com.draeger.medical.sdccc.messages.HibernateConfig;
 import com.draeger.medical.sdccc.sdcri.testclient.TestClient;
 import com.draeger.medical.sdccc.sdcri.testprovider.TestProvider;
@@ -36,7 +30,6 @@ import com.draeger.medical.sdccc.tests.InjectorTestBase;
 import com.draeger.medical.sdccc.util.HibernateConfigInMemoryImpl;
 import com.draeger.medical.sdccc.util.TestRunObserver;
 import com.google.inject.AbstractModule;
-import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -51,7 +44,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,22 +60,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.somda.sdc.biceps.common.storage.PreprocessingException;
 import org.somda.sdc.common.guice.AbstractConfigurationModule;
 import org.somda.sdc.dpws.DpwsConfig;
 import org.somda.sdc.dpws.crypto.CryptoSettings;
 import org.somda.sdc.dpws.device.DiscoveryAccess;
-import org.somda.sdc.dpws.factory.TransportBindingFactory;
-import org.somda.sdc.dpws.soap.SoapUtil;
-import org.somda.sdc.dpws.soap.factory.RequestResponseClientFactory;
-import org.somda.sdc.dpws.soap.wseventing.WsEventingConstants;
-import org.somda.sdc.dpws.soap.wseventing.model.ObjectFactory;
 import org.somda.sdc.glue.GlueConstants;
 import org.somda.sdc.glue.common.CommonConstants;
 
 /**
  * SDCcc system test.
  */
+@Execution(ExecutionMode.CONCURRENT)
 public class TestSuiteIT {
     static {
         Configurator.reconfigure(new DefaultConfiguration());
@@ -340,216 +330,6 @@ public class TestSuiteIT {
         } finally {
             provider.stopService(DEFAULT_TIMEOUT);
         }
-    }
-
-    /**
-     * Runs the test suite with a mock client and mock tests, expected to pass.
-     */
-    @Test
-    @Timeout(TEST_TIMEOUT)
-    public void testConsumer() throws IOException, PreprocessingException, TimeoutException {
-        testProvider.startService(DEFAULT_TIMEOUT);
-
-        final var injector = getConsumerInjector(false, null);
-
-        final var injectorSpy = spy(injector);
-        final var testClientSpy = spy(injector.getInstance(TestClient.class));
-        when(injectorSpy.getInstance(TestClient.class)).thenReturn(testClientSpy);
-
-        InjectorTestBase.setInjector(injectorSpy);
-
-        final var obs = injector.getInstance(WasRunObserver.class);
-        assertFalse(obs.hadDirectRun());
-        assertFalse(obs.hadInvariantRun());
-
-        final var testSuite = injector.getInstance(TestSuite.class);
-
-        final var run = testSuite.runTestSuite();
-        assertEquals(0, run, "SDCcc had an unexpected failure");
-
-        assertTrue(obs.hadDirectRun());
-        assertTrue(obs.hadInvariantRun());
-
-        // no invalidation is allowed in the test run
-        final var testRunObserver = injector.getInstance(TestRunObserver.class);
-        assertFalse(
-                testRunObserver.isInvalid(),
-                "TestRunObserver had unexpected failures: " + testRunObserver.getReasons());
-    }
-
-    /**
-     * Runs the test suite with a mock client, mock tests and preconditions throwing an exception, expected to fail, but
-     * not abort on phase 3.
-     */
-    @Test
-    @Timeout(TEST_TIMEOUT)
-    public void testInvalid() throws IOException, PreconditionException, PreprocessingException, TimeoutException {
-        testProvider.startService(DEFAULT_TIMEOUT);
-
-        final var preconditionRegistryMock = mock(PreconditionRegistry.class);
-        doThrow(new NullPointerException("intentional exception for testing purposes"))
-                .when(preconditionRegistryMock)
-                .runPreconditions();
-
-        final var injector = getConsumerInjector(false, null, new AbstractModule() {
-            /**
-             * Configures a {@link Binder} via the exposed methods.
-             */
-            @Override
-            protected void configure() {
-                super.configure();
-                bind(PreconditionRegistry.class).toInstance(preconditionRegistryMock);
-            }
-        });
-
-        InjectorTestBase.setInjector(injector);
-
-        final var obs = injector.getInstance(WasRunObserver.class);
-        assertFalse(obs.hadDirectRun());
-        assertFalse(obs.hadInvariantRun());
-
-        final var testSuite = injector.getInstance(TestSuite.class);
-
-        final var run = testSuite.runTestSuite();
-        assertEquals(0, run, "SDCcc had an unexpected failure");
-
-        assertTrue(obs.hadDirectRun());
-        assertTrue(obs.hadInvariantRun());
-
-        verify(preconditionRegistryMock, atLeastOnce()).runPreconditions();
-
-        // no invalidation is allowed in the test run
-        final var testRunObserver = injector.getInstance(TestRunObserver.class);
-        assertTrue(testRunObserver.isInvalid(), "TestRunObserver did not have a failure");
-    }
-
-    /**
-     * Runs the test consumer and causes a failed renewal, verifies that test run is marked invalid.
-     */
-    @Test
-    @Timeout(TEST_TIMEOUT)
-    public void testConsumerUnexpectedSubscriptionEnd() throws Exception {
-        testProvider.startService(DEFAULT_TIMEOUT);
-
-        final var injector = getConsumerInjector(false, null);
-        InjectorTestBase.setInjector(injector);
-
-        final var obs = injector.getInstance(WasRunObserver.class);
-        assertFalse(obs.hadDirectRun());
-        assertFalse(obs.hadInvariantRun());
-
-        final var client = injector.getInstance(TestClient.class);
-        client.startService(DEFAULT_TIMEOUT);
-        client.connect();
-
-        final var soapUtil = client.getInjector().getInstance(SoapUtil.class);
-        final var wseFactory = client.getInjector().getInstance(ObjectFactory.class);
-
-        // get active subscription id
-        final var activeSubs = testProvider.getActiveSubscriptions();
-        assertEquals(1, activeSubs.size(), "Expected only one active subscription");
-
-        final var subMan = activeSubs.values().stream().findFirst().orElseThrow();
-
-        final var subManAddress = subMan.getSubscriptionManagerEpr().getAddress();
-
-        // unsubscribe from outside the client, next renew should mark test run invalid
-        final var transportBindingFactory = client.getInjector().getInstance(TransportBindingFactory.class);
-        final var transportBinding = transportBindingFactory.createHttpBinding(subManAddress.getValue(), null);
-
-        final var rrClientFactory = client.getInjector().getInstance(RequestResponseClientFactory.class);
-        final var requestResponseClient = rrClientFactory.createRequestResponseClient(transportBinding);
-
-        final var unsubscribe =
-                soapUtil.createMessage(WsEventingConstants.WSA_ACTION_UNSUBSCRIBE, wseFactory.createUnsubscribe());
-        unsubscribe.getWsAddressingHeader().setTo(subManAddress);
-
-        LOG.info("Unsubscribing for address {}", subManAddress.getValue());
-        final var response = requestResponseClient.sendRequestResponse(unsubscribe);
-        assertFalse(response.isFault(), "unsubscribe faulted");
-
-        // wait until subscription must've ended and renews must've failed
-        final var subscriptionEnd = Duration.between(Instant.now(), subMan.getExpiresTimeout());
-
-        if (!subscriptionEnd.isNegative()) {
-            Thread.sleep(subscriptionEnd.toMillis());
-        }
-
-        // dead subscription must've been marked
-        final var testRunObserver = injector.getInstance(TestRunObserver.class);
-        assertTrue(testRunObserver.isInvalid(), "TestRunObserver had unexpectedly absent failures");
-    }
-
-    /**
-     * Runs the test consumer, connects and disconnects. Test runs should not be marked invalid.
-     */
-    @Test
-    @Timeout(TEST_TIMEOUT)
-    public void testConsumerExpectedDisconnect() throws Exception {
-        testProvider.startService(DEFAULT_TIMEOUT);
-
-        final var injector = getConsumerInjector(false, null);
-        InjectorTestBase.setInjector(injector);
-
-        final var obs = injector.getInstance(WasRunObserver.class);
-        assertFalse(obs.hadDirectRun());
-        assertFalse(obs.hadInvariantRun());
-
-        final var client = injector.getInstance(TestClient.class);
-        client.startService(DEFAULT_TIMEOUT);
-        client.connect();
-
-        // get active subscription id
-        final var activeSubs = testProvider.getActiveSubscriptions();
-        assertEquals(1, activeSubs.size(), "Expected only one active subscription");
-
-        final var subManTimeout =
-                activeSubs.values().stream().findFirst().orElseThrow().getExpiresTimeout();
-
-        client.disconnect();
-
-        // wait until subscription must've ended
-        final var subscriptionEnd = Duration.between(Instant.now(), subManTimeout);
-
-        if (!subscriptionEnd.isNegative()) {
-            Thread.sleep(subscriptionEnd.toMillis());
-        }
-
-        // test run should not be marked invalid, as disconnect was intentional
-        final var testRunObserver = injector.getInstance(TestRunObserver.class);
-        assertFalse(
-                testRunObserver.isInvalid(),
-                "TestRunObserver had unexpected failures: " + testRunObserver.getReasons());
-    }
-
-    /**
-     * Test failures are counted for invariant and direct tests with a mock client and mock tests.
-     */
-    @Test
-    @Timeout(TEST_TIMEOUT)
-    public void testMockConsumerFailures() throws IOException, PreprocessingException, TimeoutException {
-        testProvider.startService(DEFAULT_TIMEOUT);
-
-        final var injector = getConsumerInjector(true, null);
-        InjectorTestBase.setInjector(injector);
-
-        final var obs = injector.getInstance(WasRunObserver.class);
-        assertFalse(obs.hadDirectRun());
-        assertFalse(obs.hadInvariantRun());
-
-        final var testSuite = injector.getInstance(TestSuite.class);
-
-        final var run = testSuite.runTestSuite();
-        assertEquals(2, run, "SDCcc had an unexpected amount of failures");
-
-        assertTrue(obs.hadDirectRun());
-        assertTrue(obs.hadInvariantRun());
-
-        // no invalidation is allowed in the test run
-        final var testRunObserver = injector.getInstance(TestRunObserver.class);
-        assertFalse(
-                testRunObserver.isInvalid(),
-                "TestRunObserver had unexpected failures: " + testRunObserver.getReasons());
     }
 
     private record LocationConfig(

@@ -371,6 +371,18 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+<!--                    <properties>-->
+<!--                        <configurationParameters>-->
+<!--                            junit.jupiter.execution.parallel.enabled = true-->
+<!--                            junit.jupiter.execution.parallel.mode.default = concurrent-->
+<!--                        </configurationParameters>-->
+<!--                    </properties>-->
+<!--                    <parallel>all</parallel>-->
+<!--                    <threadCount>4</threadCount>-->
+                        <forkCount>8</forkCount>
+                        <reuseForks>true</reuseForks>
+                </configuration>
             </plugin>
 
             <!-- https://mvnrepository.com/artifact/com.github.spotbugs/spotbugs-maven-plugin -->

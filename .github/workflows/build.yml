@@ -20,23 +20,65 @@ jobs:
       # Run `git checkout`
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+      # Execute shared runner setup
+      - uses: ./.github/actions/setup-runner
 
       - name: Run headless test
         uses: GabrielBB/xvfb-action@v1
         with:
-          run: ./gradlew integrationTest
-          working-directory: ./ #optional
-          options: #optional
+          run: ./gradlew integrationTest -Prevision=${{ env.RELEASE_VERSION }} -Pchangelist=${{ env.CHANGELIST }}
+          working-directory: ./
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  test-java-snapshot:
+  run-unit-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      # Run `git checkout`
+      - uses: actions/checkout@v4
+
+      # Execute shared runner setup
+      - uses: ./.github/actions/setup-runner
+
+      - name: Run headless test
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: ./gradlew test -Prevision=${{ env.RELEASE_VERSION }} -Pchangelist=${{ env.CHANGELIST }}
+          working-directory: ./
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  run-check-without-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      # Run `git checkout`
+      - uses: actions/checkout@v4
+
+      # Execute shared runner setup
+      - uses: ./.github/actions/setup-runner
+
+      - name: Run check
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: ./gradlew check -x test -x integrationTest -Prevision=${{ env.RELEASE_VERSION }} -Pchangelist=${{ env.CHANGELIST }}
+          working-directory: ./
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-executable:
+    runs-on: ubuntu-latest
+    needs:
+      - run-integration-test
+      - run-unit-test
+      - run-check-without-test
     permissions:
       contents: write
       packages: read
@@ -44,38 +86,8 @@ jobs:
       # Run `git checkout`
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
-      - name: Retrieve current version from gradle.properties
-        run: |
-          echo RELEASE_VERSION=$(./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{print $2}') >> $GITHUB_ENV
-          echo GIT_HASH_SHORT=$(git rev-parse --short "$GITHUB_SHA") >> $GITHUB_ENV
-
-      - name: Remove SNAPSHOT suffix for release
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo CHANGELIST= >> $GITHUB_ENV
-
-      - name: Add git hash to snapshot release
-        if: startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo CHANGELIST=${{ env.CHANGELIST }}.${{ env.GIT_HASH_SHORT }} >> $GITHUB_ENV
-
-      - name: Run check without integration tests
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: ./gradlew check -x integrationTest -Prevision=${{ env.RELEASE_VERSION }} -Pchangelist=${{ env.CHANGELIST }}
-          working-directory: ./ #optional
-          options: #optional
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Execute shared runner setup
+      - uses: ./.github/actions/setup-runner
 
       - name: retrieve jre cache
         id: jre-cache
@@ -86,9 +98,11 @@ jobs:
 
       - name: Build package and download license information
         run: |
-          ./gradlew build -x test -Prevision=${{ env.RELEASE_VERSION }} -Pchangelist=${{ env.CHANGELIST }}
+          ./gradlew build -x test -x integrationTest -Prevision=${{ env.RELEASE_VERSION }} -Pchangelist=${{ env.CHANGELIST }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # TODO: Fetch results from the other jobs for bundling
 
       - name: Collect executable artifacts
         run: |

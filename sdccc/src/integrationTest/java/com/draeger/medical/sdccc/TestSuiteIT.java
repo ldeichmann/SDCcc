@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package it.com.draeger.medical.sdccc;
+package com.draeger.medical.sdccc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,7 +19,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.draeger.medical.sdccc.TestSuite;
 import com.draeger.medical.sdccc.configuration.DefaultEnabledTestConfig;
 import com.draeger.medical.sdccc.configuration.DefaultTestSuiteConfig;
 import com.draeger.medical.sdccc.configuration.DefaultTestSuiteModule;
@@ -29,7 +28,14 @@ import com.draeger.medical.sdccc.manipulation.precondition.PreconditionException
 import com.draeger.medical.sdccc.manipulation.precondition.PreconditionRegistry;
 import com.draeger.medical.sdccc.messages.HibernateConfig;
 import com.draeger.medical.sdccc.sdcri.testclient.TestClient;
+import com.draeger.medical.sdccc.test_util.SslMetadata;
+import com.draeger.medical.sdccc.test_util.testprovider.TestProvider;
+import com.draeger.medical.sdccc.test_util.testprovider.TestProviderConfig;
+import com.draeger.medical.sdccc.test_util.testprovider.TestProviderImpl;
+import com.draeger.medical.sdccc.test_util.testprovider.guice.ProviderFactory;
 import com.draeger.medical.sdccc.tests.InjectorTestBase;
+import com.draeger.medical.sdccc.testsuite_it_mock_tests.Identifiers;
+import com.draeger.medical.sdccc.testsuite_it_mock_tests.WasRunObserver;
 import com.draeger.medical.sdccc.util.Constants;
 import com.draeger.medical.sdccc.util.HibernateConfigInMemoryImpl;
 import com.draeger.medical.sdccc.util.TestRunObserver;
@@ -40,13 +46,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.util.Modules;
-import it.com.draeger.medical.sdccc.test_util.SslMetadata;
-import it.com.draeger.medical.sdccc.test_util.testprovider.TestProvider;
-import it.com.draeger.medical.sdccc.test_util.testprovider.TestProviderConfig;
-import it.com.draeger.medical.sdccc.test_util.testprovider.TestProviderImpl;
-import it.com.draeger.medical.sdccc.test_util.testprovider.guice.ProviderFactory;
-import it.com.draeger.medical.sdccc.testsuite_it_mock_tests.Identifiers;
-import it.com.draeger.medical.sdccc.testsuite_it_mock_tests.WasRunObserver;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -622,7 +621,7 @@ public class TestSuiteIT {
                     .build(ProviderFactory.class));
 
             bind(TestSuiteConfig.SDC_TEST_DIRECTORIES, String[].class, new String[] {
-                "it.com.draeger.medical.sdccc.testsuite_it_mock_tests",
+                "com.draeger.medical.sdccc.testsuite_it_mock_tests",
             });
 
             bind(TestRunConfig.TEST_RUN_DIR, File.class, tempDir.toFile());

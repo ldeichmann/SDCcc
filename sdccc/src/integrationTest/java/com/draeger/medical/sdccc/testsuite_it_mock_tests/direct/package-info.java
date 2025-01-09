@@ -6,9 +6,9 @@
  */
 
 /**
- * Mock invariant tests.
+ * Mock direct tests.
  */
 @ParametersAreNonnullByDefault
-package it.com.draeger.medical.sdccc.testsuite_it_mock_tests.invariant;
+package com.draeger.medical.sdccc.testsuite_it_mock_tests.direct;
 
 import javax.annotation.ParametersAreNonnullByDefault;

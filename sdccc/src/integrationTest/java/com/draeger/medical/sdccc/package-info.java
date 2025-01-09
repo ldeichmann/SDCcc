@@ -6,9 +6,9 @@
  */
 
 /**
- * Mock direct tests.
+ * SDCcc, formerly known as SDC Test Suite.
  */
 @ParametersAreNonnullByDefault
-package it.com.draeger.medical.sdccc.testsuite_it_mock_tests.direct;
+package com.draeger.medical.sdccc;
 
 import javax.annotation.ParametersAreNonnullByDefault;

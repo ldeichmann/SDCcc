@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package it.com.draeger.medical.sdccc.test_util;
+package com.draeger.medical.sdccc.test_util;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.Service;

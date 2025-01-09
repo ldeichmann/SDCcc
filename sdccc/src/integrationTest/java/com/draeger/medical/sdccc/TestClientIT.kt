@@ -5,14 +5,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-package it.com.draeger.medical.sdccc
+package com.draeger.medical.sdccc
 
 import com.draeger.medical.sdccc.sdcri.testclient.MdibChange
 import com.draeger.medical.sdccc.sdcri.testclient.TestClient
 import com.draeger.medical.sdccc.sdcri.testclient.TestClientMdibObserver
 import com.draeger.medical.sdccc.tests.InjectorTestBase
 import com.google.inject.Injector
-import it.com.draeger.medical.sdccc.test_util.testprovider.TestProvider
+import com.draeger.medical.sdccc.test_util.testprovider.TestProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

@@ -9,6 +9,6 @@
  * Mock tests.
  */
 @ParametersAreNonnullByDefault
-package it.com.draeger.medical.sdccc.testsuite_it_mock_tests;
+package com.draeger.medical.sdccc.testsuite_it_mock_tests;
 
 import javax.annotation.ParametersAreNonnullByDefault;

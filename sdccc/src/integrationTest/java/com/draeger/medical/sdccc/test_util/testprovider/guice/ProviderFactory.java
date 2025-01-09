@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-package it.com.draeger.medical.sdccc.test_util.testprovider.guice;
+package com.draeger.medical.sdccc.test_util.testprovider.guice;
 
+import com.draeger.medical.sdccc.test_util.testprovider.TestProviderImpl;
 import com.google.inject.assistedinject.Assisted;
-import it.com.draeger.medical.sdccc.test_util.testprovider.TestProviderImpl;
 import java.io.InputStream;
 
 /**

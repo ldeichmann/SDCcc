@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package it.com.draeger.medical.sdccc.testsuite_it_mock_tests.direct;
+package com.draeger.medical.sdccc.testsuite_it_mock_tests.direct;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -14,8 +14,8 @@ import com.draeger.medical.sdccc.sdcri.testclient.TestClient;
 import com.draeger.medical.sdccc.tests.InjectorTestBase;
 import com.draeger.medical.sdccc.tests.annotations.TestDescription;
 import com.draeger.medical.sdccc.tests.annotations.TestIdentifier;
-import it.com.draeger.medical.sdccc.testsuite_it_mock_tests.Identifiers;
-import it.com.draeger.medical.sdccc.testsuite_it_mock_tests.WasRunObserver;
+import com.draeger.medical.sdccc.testsuite_it_mock_tests.Identifiers;
+import com.draeger.medical.sdccc.testsuite_it_mock_tests.WasRunObserver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

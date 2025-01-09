@@ -6,9 +6,9 @@
  */
 
 /**
- * SDCcc test provider guice factory.
+ * SDCcc integration test utilities.
  */
 @ParametersAreNonnullByDefault
-package it.com.draeger.medical.sdccc.test_util.testprovider.guice;
+package com.draeger.medical.sdccc.test_util;
 
 import javax.annotation.ParametersAreNonnullByDefault;

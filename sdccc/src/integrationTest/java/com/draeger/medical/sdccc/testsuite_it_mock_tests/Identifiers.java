@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package it.com.draeger.medical.sdccc.testsuite_it_mock_tests;
+package com.draeger.medical.sdccc.testsuite_it_mock_tests;
 
 /**
  * Identifiers for mock tests.

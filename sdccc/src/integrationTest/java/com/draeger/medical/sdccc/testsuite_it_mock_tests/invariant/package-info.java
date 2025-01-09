@@ -6,9 +6,9 @@
  */
 
 /**
- * SDCcc test provider.
+ * Mock invariant tests.
  */
 @ParametersAreNonnullByDefault
-package it.com.draeger.medical.sdccc.test_util.testprovider;
+package com.draeger.medical.sdccc.testsuite_it_mock_tests.invariant;
 
 import javax.annotation.ParametersAreNonnullByDefault;

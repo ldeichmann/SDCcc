@@ -11,7 +11,7 @@ runs:
     - name: Retrieve current version from gradle.properties
       shell: bash
       run: |
-        echo RELEASE_VERSION=$(./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{print $2}') >> $GITHUB_ENV
+        echo RELEASE_VERSION=$(./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{print $2}') | sed "s/-SNAPSHOT//" >> $GITHUB_ENV
         echo GIT_HASH_SHORT=$(git rev-parse --short "$GITHUB_SHA") >> $GITHUB_ENV
 
     - name: Remove SNAPSHOT suffix for release

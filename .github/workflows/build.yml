@@ -31,6 +31,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-reports
+          path: sdccc/build/reports
+
   run-unit-test:
     runs-on: ubuntu-latest
     permissions:
@@ -52,6 +58,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: sdccc/build/reports
+
   run-check-without-test:
     runs-on: ubuntu-latest
     permissions:
@@ -72,6 +84,12 @@ jobs:
           working-directory: ./
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Static analysis reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-analysis-reports
+          path: sdccc/build/reports
 
   build-executable:
     runs-on: ubuntu-latest
@@ -102,7 +120,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # TODO: Fetch results from the other jobs for bundling
+      # Fetch results from the other jobs for bundling
+      - name: Download reports from other jobs
+        uses: actions/download-artifact@v4
+        with:
+          path: sdccc/build/reports/
+          pattern: "*-reports"
+          merge-multiple: true
 
       - name: Collect executable artifacts
         run: |

@@ -137,25 +137,37 @@ jobs:
           cp README.md sdccc/build/zip/
 
       - name: Set zip file name for release
-        if: startsWith(github.ref, 'refs/tags/')
+#        if: startsWith(github.ref, 'refs/tags/')
         run: |
           echo ZIP_FILE_NAME=SDCcc-${{ env.RELEASE_VERSION }}${{ env.CHANGELIST }}-executable-win64.zip >> $GITHUB_ENV
 
       - name: Install zip
-        if: startsWith(github.ref, 'refs/tags/')
+#        if: startsWith(github.ref, 'refs/tags/')
         uses: montudor/action-zip@v1
 
       - name: Zip executable
-        if: startsWith(github.ref, 'refs/tags/')
+#        if: startsWith(github.ref, 'refs/tags/')
         working-directory: sdccc/build/zip
         run: |
           zip -qq -r ${{ env.ZIP_FILE_NAME }} .
 
       - name: Zip test results
-        if: startsWith(github.ref, 'refs/tags/')
+#        if: startsWith(github.ref, 'refs/tags/')
         working-directory: sdccc/build/
         run: |
           zip -qq -r test-results.zip reports/tests reports/checkstyle reports/spotbugs reports/detekt
+
+      - name: Upload executable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable
+          path: "sdccc/build/zip/${{ env.ZIP_FILE_NAME }}"
+
+      - name: Upload test result zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "sdccc/build/test-results.zip"
 
       - name: Attach artifacts to snapshot
         uses: softprops/action-gh-release@v1
